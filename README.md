@@ -61,7 +61,7 @@ image2ascii <input_file_path> <arguments>
 ```bash
 image2ascii image.png
 image2ascii image.png --size 100 50 --reverse --out output.txt
-image2ascii image.png --size 100 50 --reverse --log output.txt
+image2ascii image.png --size 100 50 --reverse --log
 image2ascii image.png --eval "console.log('Hello World')"
 ```
 

@@ -3,7 +3,21 @@ const { writeFileSync } = require('fs');
 const argv = process.argv;
 const { Fore } = require('./colorama');
 const package = require("./package.json");
+const { exec } = require("child_process");
 
+function runCmd(cmd){
+    exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+    }
+    if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+    }
+    console.log(`stdout: ${stdout}`);
+});
+}
 async function imageToAscii(filePath) {
     try {
         let on_converted = "";
@@ -38,6 +52,8 @@ async function imageToAscii(filePath) {
                 on_start = argv[i+1];
             } else if (arg === '--beforeconverting' || arg === '-befcon') {
                 before_converting = argv[i+1];
+            } else if (arg === '--execcmd' || arg === '-ec') {
+                runCmd(argv[i+1]);
             }
         }
         eval(on_start);
@@ -106,8 +122,11 @@ if (argv.length < 3 || argv.includes("--help") || argv.includes("h") || argv.inc
     console.log(Fore.BrightBlue + '    --onsaved' + Fore.Reset + ' or ' + Fore.BrightBlue + '-onsvd' + Fore.Reset + `: execute the specified javascript code on saved.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onsvd "<javascript code>"\n`);
     console.log(Fore.BrightBlue + '    --onstart' + Fore.Reset + ' or ' + Fore.BrightBlue + '-onst' + Fore.Reset + `: execute the specified javascript code on start.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onst "<javascript code>"\n`);
     console.log(Fore.BrightBlue + '    --beforeconverting' + Fore.Reset + ' or ' + Fore.BrightBlue + '-befcon' + Fore.Reset + `: execute the specified javascript code before converting.\n` + Fore.Green + '    Example' + Fore.Reset + `: --befcon "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --execcmd' + Fore.Reset + ' or ' + Fore.BrightBlue + '-ec' + Fore.Reset + `: execute the specified Shell code.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --execcmd "<Shell code>"\n`);
     console.log("");
     process.exit(0);
 }
 
 imageToAscii(argv[2]);
+
+

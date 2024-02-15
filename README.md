@@ -21,50 +21,56 @@
 
     --deatiledhelp or -dh: show this menu.
 
-    --out or -o: set output file path.
+    --out: set output file path.
     Usage: --out <output_file_path>
 
-    --size or -s: resize image to specified width and height.
+    --size: resize image to specified width and height.
     Usage: --size <width (pixels)> <height (pixels)>
 
-    --reverse or -r: reverse the ascii characters.
+    -r: reverse the ascii characters.
 
-    --log or -l: print the ascii text to the console.
+    -l: print the ascii text to the console.
 
-    --noinfo or -i: disable write info to console.
+    -i: disable write info to console.
 
-    --savesize or -ss: disable the resizing performed to maintain the aspect ratio..
+    -w: removes the whitespaces.
+
+    -s: disable the resizing performed to maintain the aspect ratio..
 
     +<JIMP_Function>: run specified JIMP function before converting to ascii.
     Example: +resize(90,24)
 
-    --exec or -e: execute the specified javascript code.
+    --exec: execute the specified javascript code.
     Usage: --exec "<javascript code>"
 
-    --onconverted or -onconed: execute the specified javascript code on converted.
+    --onconed: execute the specified javascript code on converted.
     Example: --onconed "<javascript code>"
 
-    --onsaved or -onsvd: execute the specified javascript code on saved.
+    --onsvd: execute the specified javascript code on saved.
     Example: --onsvd "<javascript code>"
 
-    --onstart or -onst: execute the specified javascript code on start.
+    --onst: execute the specified javascript code on start.
     Example: --onst "<javascript code>"
 
-    --beforeconverting or -befcon: execute the specified javascript code before converting.
+    --befcon: execute the specified javascript code before converting.
     Example: --befcon "<javascript code>"
-    
-    --execcmd or -ec: execute the specified Shell code.
+
+    --execcmd: execute the specified Shell code.
     Usage: --execcmd "<Shell code>"
-    
+
+
 ```
 
 - [PixCii](#pixcii)
   - [Istallation](#istallation)
   - [Build](#build)
-  -  [Scripting](#scripting)
   - [Usage](#usage)
     - [Run like this:](#run-like-this)
     - [Examples](#examples)
+  - [Scripting](#scripting)
+    - [Using --exec Argument](#using---exec-argument)
+    - [Using runCmd Function](#using-runcmd-function)
+    - [Using --execcmd Argument](#using---execcmd-argument)
   - [License](#license)
 
 ## Istallation
@@ -79,6 +85,25 @@ cd PixCii
 npm install
 node index.js
 ```
+## Usage
+
+### Run like this:
+```bash
+pixcii <input_file_path> <arguments>
+```
+
+> [!TIP]
+> **Or you can simply drag and drop the files you want to cut into executable file**
+
+### Examples
+```bash
+pixcii image.png
+pixcii image.png --size 100 50 -r --out output.txt
+pixcii image.png --size 100 50 -riws
+pixcii image.png --size 100 50 -rl
+pixcii image.png --size 100 50 --exec "console.log(\"Done ✔\");"
+```
+
 ## Scripting
 You can use scripting to execute JavaScript code or execute Shell code. For better information look Detailed Information.
 
@@ -98,23 +123,6 @@ Output: Hello World! from runCmd function
 pixcii image.png --execcmd "echo Hello World! from --execcmd arg"
 ```
 Output:  Hello World! from --execcmd arg
-## Usage
-
-### Run like this:
-```bash
-pixcii <input_file_path> <arguments>
-```
-
-> [!TIP]
-> **Or you can simply drag and drop the files you want to cut into executable file**
-
-### Examples
-```bash
-pixcii image.png
-pixcii image.png --size 100 50 --reverse --out output.txt
-pixcii image.png --size 100 50 --reverse --log
-pixcii image.png --size 100 50 --reverse --exec "console.log(\"Done :D\");"
-```
 
 ## License
 [GPL-V3](https://www.gnu.org/licenses/gpl-3.0.en.html#license-text)

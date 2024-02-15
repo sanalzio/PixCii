@@ -25,7 +25,7 @@ async function imageToAscii(filePath) {
         let before_converting = "";
         let on_start = "";
         const image = await Jimp.read(filePath);
-        if(!(argv.includes("--savesize") || argv.includes("-ss") || argv.includes("ss"))) {
+        if(!ops.includes("s")) {
             image.resize(image.bitmap.width*2, image.bitmap.height);
         }
         let width = image.bitmap.width;
@@ -36,26 +36,29 @@ async function imageToAscii(filePath) {
             const arg = argv[i];
             if (arg.startsWith("+")) {
                 eval("image."+arg.slice(1));
-            } else if (arg === '--size' || arg === 's' || arg === '-s') {
+            } else if (arg === '--size') {
                 image.resize(eval(argv[i+1]), eval(argv[i+2]));
-            } else if (arg === '--reverse' || arg === 'r' || arg === '-r') {
-                asciiChars=asciiChars.reverse();
-            } else if (arg === '--exec' || arg === 'e' || arg === '-e') {
+            } else if (arg === '--exec') {
                 eval(argv[i+1]);
-            } else if (arg === '--out' || arg === 'o' || arg === '-o') {
+            } else if (arg === '--out') {
                 filename = argv[i+1];
-            } else if (arg === '--onconverted' || arg === '-onconed') {
+            } else if (arg === '--onconed') {
                 on_converted = argv[i+1];
-            } else if (arg === '--onsaved' || arg === '-onsvd') {
+            } else if (arg === '--onsvd') {
                 on_saved = argv[i+1];
-            } else if (arg === '--onstart' || arg === '-onst') {
+            } else if (arg === '--onst') {
                 on_start = argv[i+1];
-            } else if (arg === '--beforeconverting' || arg === '-befcon') {
+            } else if (arg === '--befcon') {
                 before_converting = argv[i+1];
-            } else if (arg === '--execcmd' || arg === '-ec') {
+            } else if (arg === '--execcmd') {
                 runCmd(argv[i+1]);
             }
         }
+
+        if (ops.includes("r")) {
+            asciiChars=asciiChars.reverse();
+        }
+
         eval(on_start);
         width = image.bitmap.width;
         height = image.bitmap.height;
@@ -64,19 +67,25 @@ async function imageToAscii(filePath) {
 
         eval(before_converting);
         for (let y = 0; y < height; y++) {
-            asciiArt += (argv.includes("--reverse") || argv.includes("-r") || argv.includes("r"))?Fore.Reverse:"";
+            let thisLine = "";
+            thisLine += ops.includes("r")?Fore.Reverse:"";
             for (let x = 0; x < width; x++) {
                 const pixelColor = Jimp.intToRGBA(image.getPixelColor(x, y));
                 const gray = 0.2126 * pixelColor.r + 0.7152 * pixelColor.g + 0.0722 * pixelColor.b;
                 const index = Math.floor((gray * (asciiChars.length - 1)) / 255);
                 const asciiChar = asciiChars[index];
-                asciiArt += asciiChar;
+                thisLine += asciiChar;
             }
-            asciiArt += (argv.includes("--reverse") || argv.includes("-r") || argv.includes("r"))?Fore.Reset+'\n':"\n";
+            if (ops.includes("w")) {
+                asciiArt += ops.includes("r")?Fore.Reset+thisLine.trimEnd()+'\n':thisLine.trimEnd()+"\n";
+            } else {
+                asciiArt += ops.includes("r")?Fore.Reset+thisLine+'\n':thisLine+"\n";
+            }
         }
+        asciiArt = asciiArt.slice(0,-2)
         eval(on_converted);
-        if (argv.includes("--log") || argv.includes("-l") || argv.includes("l")){
-            console.log((argv.includes("--reverse") || argv.includes("-r") || argv.includes("r"))?Fore.Reverse+asciiArt+Fore.Reset:asciiArt);
+        if (ops.includes("l")) {
+            console.log(ops.includes("r")?Fore.Reverse+asciiArt+Fore.Reset:asciiArt);
             process.exit(0);
         }
         writeFileSync(filename, asciiArt);
@@ -86,7 +95,16 @@ async function imageToAscii(filePath) {
         console.error(Fore.Red + 'Error:' + Fore.Reset, error.message);
     }
 }
-if(!(argv.includes("--noinfo") || argv.includes("-i") || argv.includes("i"))) {
+
+let ops="";
+for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg.startsWith("-") && !arg.startsWith("--")) {
+        ops+=arg.slice(1).toLowerCase();
+    }
+}
+
+if(!ops.includes("i")) {
     console.log(Fore.Yellow + '\n\n                     PixCii ' + package.version + Fore.Reset);
     console.log('    Simple "open-source" image to ASCII text converter.\n');
 }
@@ -96,12 +114,13 @@ if (argv.length < 3 || argv.includes("--help") || argv.includes("h") || argv.inc
     console.log(Fore.Yellow + '    Arguments' + Fore.Reset + `:\n`);
     console.log(Fore.BrightBlue + '    --help' + Fore.Reset + ' or ' + Fore.BrightBlue + '-h' + Fore.Reset + `: show this menu.\n`);
     console.log(Fore.BrightBlue + '    --deatiledhelp' + Fore.Reset + ' or ' + Fore.BrightBlue + '-dh' + Fore.Reset + `: show detailed help menu.\n`);
-    console.log(Fore.BrightBlue + '    --out' + Fore.Reset + ' or ' + Fore.BrightBlue + '-o' + Fore.Reset + `: set output file path.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --out <output_file_path>\n`);
-    console.log(Fore.BrightBlue + '    --size' + Fore.Reset + ' or ' + Fore.BrightBlue + '-s' + Fore.Reset + `: resize image to specified width and height.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --size <width (pixels)> <height (pixels)>\n`);
-    console.log(Fore.BrightBlue + '    --reverse' + Fore.Reset + ' or ' + Fore.BrightBlue + '-r' + Fore.Reset + `: reverse the ascii characters.\n`);
-    console.log(Fore.BrightBlue + '    --log' + Fore.Reset + ' or ' + Fore.BrightBlue + '-l' + Fore.Reset + `: print the ascii text to the console.\n`);
-    console.log(Fore.BrightBlue + '    --noinfo' + Fore.Reset + ' or ' + Fore.BrightBlue + '-i' + Fore.Reset + `: disable write info to console.\n`);
-    console.log(Fore.BrightBlue + '    --savesize' + Fore.Reset + ' or ' + Fore.BrightBlue + '-ss' + Fore.Reset + `: disable the resizing performed to maintain the aspect ratio..\n`);
+    console.log(Fore.BrightBlue + '    --out' + Fore.Reset + `: set output file path.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --out <output_file_path>\n`);
+    console.log(Fore.BrightBlue + '    --size' + Fore.Reset + `: resize image to specified width and height.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --size <width (pixels)> <height (pixels)>\n`);
+    console.log(Fore.BrightBlue + '    -r' + Fore.Reset + `: reverse the ascii characters.\n`);
+    console.log(Fore.BrightBlue + '    -l' + Fore.Reset + `: print the ascii text to the console.\n`);
+    console.log(Fore.BrightBlue + '    -i' + Fore.Reset + `: disable write info to console.\n`);
+    console.log(Fore.BrightBlue + '    -w' + Fore.Reset + `: removes the whitespaces.\n`);
+    console.log(Fore.BrightBlue + '    -s' + Fore.Reset + `: disable the resizing performed to maintain the aspect ratio..\n`);
     console.log("");
     process.exit(0);
 } else if (argv.length < 3 || argv.includes("--deatiledhelp") || argv.includes("dh") || argv.includes("-dh") || argv.includes("?+")) {
@@ -110,19 +129,20 @@ if (argv.length < 3 || argv.includes("--help") || argv.includes("h") || argv.inc
     console.log(Fore.Yellow + '    Arguments' + Fore.Reset + `:\n`);
     console.log(Fore.BrightBlue + '    --help' + Fore.Reset + ' or ' + Fore.BrightBlue + '-h' + Fore.Reset + `: show undetailed help menu.\n`);
     console.log(Fore.BrightBlue + '    --deatiledhelp' + Fore.Reset + ' or ' + Fore.BrightBlue + '-dh' + Fore.Reset + `: show this menu.\n`);
-    console.log(Fore.BrightBlue + '    --out' + Fore.Reset + ' or ' + Fore.BrightBlue + '-o' + Fore.Reset + `: set output file path.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --out <output_file_path>\n`);
-    console.log(Fore.BrightBlue + '    --size' + Fore.Reset + ' or ' + Fore.BrightBlue + '-s' + Fore.Reset + `: resize image to specified width and height.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --size <width (pixels)> <height (pixels)>\n`);
-    console.log(Fore.BrightBlue + '    --reverse' + Fore.Reset + ' or ' + Fore.BrightBlue + '-r' + Fore.Reset + `: reverse the ascii characters.\n`);
-    console.log(Fore.BrightBlue + '    --log' + Fore.Reset + ' or ' + Fore.BrightBlue + '-l' + Fore.Reset + `: print the ascii text to the console.\n`);
-    console.log(Fore.BrightBlue + '    --noinfo' + Fore.Reset + ' or ' + Fore.BrightBlue + '-i' + Fore.Reset + `: disable write info to console.\n`);
-    console.log(Fore.BrightBlue + '    --savesize' + Fore.Reset + ' or ' + Fore.BrightBlue + '-ss' + Fore.Reset + `: disable the resizing performed to maintain the aspect ratio..\n`);
+    console.log(Fore.BrightBlue + '    --out' + Fore.Reset + `: set output file path.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --out <output_file_path>\n`);
+    console.log(Fore.BrightBlue + '    --size' + Fore.Reset + `: resize image to specified width and height.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --size <width (pixels)> <height (pixels)>\n`);
+    console.log(Fore.BrightBlue + '    -r' + Fore.Reset + `: reverse the ascii characters.\n`);
+    console.log(Fore.BrightBlue + '    -l' + Fore.Reset + `: print the ascii text to the console.\n`);
+    console.log(Fore.BrightBlue + '    -i' + Fore.Reset + `: disable write info to console.\n`);
+    console.log(Fore.BrightBlue + '    -w' + Fore.Reset + `: removes the whitespaces.\n`);
+    console.log(Fore.BrightBlue + '    -s' + Fore.Reset + `: disable the resizing performed to maintain the aspect ratio..\n`);
     console.log(Fore.BrightBlue + '    +<JIMP_Function>' + Fore.Reset + `: run specified JIMP function before converting to ascii.\n` + Fore.Green + '    Example' + Fore.Reset + `: +resize(90,24)\n`);
-    console.log(Fore.BrightBlue + '    --exec' + Fore.Reset + ' or ' + Fore.BrightBlue + '-e' + Fore.Reset + `: execute the specified javascript code.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --exec "<javascript code>"\n`);
-    console.log(Fore.BrightBlue + '    --onconverted' + Fore.Reset + ' or ' + Fore.BrightBlue + '-onconed' + Fore.Reset + `: execute the specified javascript code on converted.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onconed "<javascript code>"\n`);
-    console.log(Fore.BrightBlue + '    --onsaved' + Fore.Reset + ' or ' + Fore.BrightBlue + '-onsvd' + Fore.Reset + `: execute the specified javascript code on saved.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onsvd "<javascript code>"\n`);
-    console.log(Fore.BrightBlue + '    --onstart' + Fore.Reset + ' or ' + Fore.BrightBlue + '-onst' + Fore.Reset + `: execute the specified javascript code on start.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onst "<javascript code>"\n`);
-    console.log(Fore.BrightBlue + '    --beforeconverting' + Fore.Reset + ' or ' + Fore.BrightBlue + '-befcon' + Fore.Reset + `: execute the specified javascript code before converting.\n` + Fore.Green + '    Example' + Fore.Reset + `: --befcon "<javascript code>"\n`);
-    console.log(Fore.BrightBlue + '    --execcmd' + Fore.Reset + ' or ' + Fore.BrightBlue + '-ec' + Fore.Reset + `: execute the specified Shell code.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --execcmd "<Shell code>"\n`);
+    console.log(Fore.BrightBlue + '    --exec' + Fore.Reset + `: execute the specified javascript code.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --exec "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --onconed' + Fore.Reset + `: execute the specified javascript code on converted.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onconed "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --onsvd' + Fore.Reset + `: execute the specified javascript code on saved.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onsvd "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --onst' + Fore.Reset + `: execute the specified javascript code on start.\n` + Fore.Green + '    Example' + Fore.Reset + `: --onst "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --befcon' + Fore.Reset + `: execute the specified javascript code before converting.\n` + Fore.Green + '    Example' + Fore.Reset + `: --befcon "<javascript code>"\n`);
+    console.log(Fore.BrightBlue + '    --execcmd' + Fore.Reset + `: execute the specified Shell code.\n` + Fore.Green + '    Usage' + Fore.Reset + `: --execcmd "<Shell code>"\n`);
     console.log("");
     process.exit(0);
 }
